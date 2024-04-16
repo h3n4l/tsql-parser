@@ -3,6 +3,7 @@ package parser_test
 import (
 	"os"
 	"path"
+	"runtime/pprof"
 	"testing"
 
 	"github.com/antlr4-go/antlr/v4"
@@ -67,4 +68,41 @@ func TestTSQLParser(t *testing.T) {
 			require.Equal(t, 0, parserErrors.errors)
 		})
 	}
+}
+
+func TestTSQLParserSingleFilePProf(t *testing.T) {
+	filePath := ""
+	filePath = "examples/single.sql"
+	if filePath == "" {
+		t.Skip()
+	}
+
+	f, err := os.Create("cpu.pprof")
+	require.NoError(t, err)
+	defer f.Close()
+	pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
+
+	input, err := antlr.NewFileStream(filePath)
+	require.NoError(t, err)
+
+	lexer := tsqlparser.NewTSqlLexer(input)
+
+	stream := antlr.NewCommonTokenStream(lexer, 0)
+	p := tsqlparser.NewTSqlParser(stream)
+
+	lexerErrors := &CustomErrorListener{}
+	lexer.RemoveErrorListeners()
+	lexer.AddErrorListener(lexerErrors)
+
+	parserErrors := &CustomErrorListener{}
+	p.RemoveErrorListeners()
+	p.AddErrorListener(parserErrors)
+
+	p.BuildParseTrees = true
+
+	_ = p.Tsql_file()
+
+	require.Equal(t, 0, lexerErrors.errors)
+	require.Equal(t, 0, parserErrors.errors)
 }

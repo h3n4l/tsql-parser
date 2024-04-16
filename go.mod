@@ -14,3 +14,5 @@ require (
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20230515195305-f3d0a9c9a5cc // indirect
 )
+
+replace github.com/antlr4-go/antlr/v4 => github.com/h3n4l/antlr/v4 v4.0.0-20231027162627-6c4b67c0e9a1
